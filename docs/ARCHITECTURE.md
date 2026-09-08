@@ -17,9 +17,10 @@ You expect a token to land (or you are rehearsing with a stand-in). You want:
 - Server-rendered first paint, then **AJAX poll** (`GET ?ajax=1`) on an interval (`AW_POLL_MS`, default 10s).
 - **Airdrop watch panel**: client-side tabs in `localStorage`.
   - First successful poll **baselines** existing drop tx hashes so history does not spawn tabs.
-  - Later polls: if not paused, the newest unseen incoming contract becomes the **front tab**.
-  - Pause button: no new tabs; foreground stats still refresh.
+  - Later polls: if not paused, new incoming contracts appear as tabs. **Follow-latest** (default) makes the newest tab active; **clicking any tab pins it** so balance/USD/drops keep updating for that active tab while newer tabs still appear.
+  - Pause button: no new tabs; active-tab stats still refresh.
 - Holdings, all incoming drops, and recent native txs update in place.
+- **USD pricing**: explorer `exchange_rate` when present; otherwise **DexScreener** best-liquidity pair (`price_source`: `blockscout` | `dexscreener`).
 
 ### 2. PHP snapshot builder (`includes/lib.php`)
 

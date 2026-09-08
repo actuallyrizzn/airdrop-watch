@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.0] - 2026-09-08
+
+### Changed
+- Docs/architecture brought current with production watch behavior at end of NGRAM launch (active-tab pin, DexScreener USD, follow-latest). Standalone product home; no longer hosted on rizzn.net.
+
 ## [0.1.2] - 2026-09-08
 
 ### Changed

@@ -49,7 +49,6 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · deploy: [docs/DEPLOYMEN
 - Multi-address / multi-watch profiles from one install.
 - Optional notifications (webhook / Telegram) when a new tab is promoted.
 - Hardening: bind proxy to loopback + reverse proxy only; rate-limit auth.
-- Dex / indexer price fallbacks when explorers omit `exchange_rate` (DexScreener already wired in v0.1.1).
 
 ## License
 
@@ -60,4 +59,4 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · deploy: [docs/DEPLOYMEN
 
 ## Status
 
-v0.1.0 — extracted and generalized from a production Robinhood Chain watch page. Useful today; chain pack is intentionally small until the roadmap item above lands.
+v0.2.0 — feature-complete for the NGRAM / Robinhood Chain launch watch (tabbed active-tab pin, DexScreener USD fallback, optional FlareSolverr proxy). Further chain presets remain on the roadmap.
