@@ -383,7 +383,8 @@ $showUni = !empty($chain['amm_links']['uniswap']) && in_array($amm, ['both', 'un
       }
       function norm(a) { return String(a || '').toLowerCase(); }
 
-      const EX = <?= json_encode(AW_CHAIN['explorer'], JSON_UNESCAPED_SLASHES) ?>;
+      const EX = <?= json_encode($chain['explorer'], JSON_UNESCAPED_SLASHES) ?>;
+      const UNI_SLUG = <?= json_encode((string) ($chain['uniswap_chain_slug'] ?? ''), JSON_UNESCAPED_SLASHES) ?>;
       const POLL_MS = <?= (int) $watch['poll_ms'] ?>;
       const STORE_KEY = 'airdrop_watch_v1';
       let lastOkAt = Date.now();
