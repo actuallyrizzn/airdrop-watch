@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.2] - 2026-09-08
+
+### Changed
+- Live panel updates track the **active** (selected) tab. Pin by clicking a tab; new tabs still appear without stealing focus unless following latest.
+
 ## [0.1.1] - 2026-09-08
 
 ### Fixed

@@ -220,15 +220,16 @@ $showUni = !empty($chain['amm_links']['uniswap']) && in_array($amm, ['both', 'un
             </div>
             <div class="rw-panel-b">
                 <p class="rw-airdrop-note" id="rw-ad-note">
-                    Leave this page open while you wait on a drop. New incoming tokens become the front tab;
-                    pause new monitoring from the top bar to lock the front tab (that tab still live-updates).
+                    Leave this page open while you wait on a drop. New tokens appear as tabs; following latest makes them active.
+                    Click any tab to pin it — live balance, USD, and drops keep updating for that <em>active</em> tab even if newer tabs arrive.
+                    Pause new monitoring to stop discovering tabs (active tab still polls).
                 </p>
                 <div class="rw-tabs" id="rw-ad-tabs" role="tablist" aria-label="Airdrop tabs"></div>
                 <div id="rw-ad-empty" class="rw-empty" hidden>No airdrop tabs yet — waiting for the first incoming token drop.</div>
                 <div id="rw-ad-body">
                     <div class="rw-airdrop-grid">
                         <div class="rw-stat">
-                            <div class="label">Foreground token</div>
+                            <div class="label">Active token</div>
                             <div class="value" id="rw-ad-symbol">—</div>
                             <div class="hint rw-mono" id="rw-ad-contract"></div>
                         </div>
@@ -405,7 +406,7 @@ $showUni = !empty($chain['amm_links']['uniswap']) && in_array($amm, ['both', 'un
             if (s && Array.isArray(s.tabs)) return s;
           }
         } catch (e) {}
-        return { tabs: [], active: null, pauseNew: false, seenTx: {}, primed: false };
+        return { tabs: [], active: null, pauseNew: false, followLatest: true, seenTx: {}, primed: false };
       }
 
       function saveState() {
@@ -414,6 +415,7 @@ $showUni = !empty($chain['amm_links']['uniswap']) && in_array($amm, ['both', 'un
             tabs: state.tabs,
             active: state.active,
             pauseNew: state.pauseNew,
+            followLatest: state.followLatest !== false,
             seenTx: state.seenTx,
             primed: !!state.primed
           }));
@@ -424,6 +426,9 @@ $showUni = !empty($chain['amm_links']['uniswap']) && in_array($amm, ['both', 'un
       if (!state.seenTx || typeof state.seenTx !== 'object') state.seenTx = {};
       if (!Array.isArray(state.tabs)) state.tabs = [];
       if (typeof state.primed !== 'boolean') state.primed = false;
+      if (typeof state.followLatest !== 'boolean') state.followLatest = true;
+      state.tabs.forEach(t => { if (t && t.contract) t.contract = norm(t.contract); });
+      if (state.active) state.active = norm(state.active);
 
       // First visit: seed stand-in demo tab so the UI is not empty.
       if (!state.tabs.length && seedToken) {
@@ -469,10 +474,22 @@ $showUni = !empty($chain['amm_links']['uniswap']) && in_array($amm, ['both', 'un
           btn.setAttribute('aria-pressed', state.pauseNew ? 'true' : 'false');
         }
         if (mode) {
-          mode.textContent = state.pauseNew
-            ? 'new drops paused · front tab still live'
-            : 'watching for new drops';
-          mode.className = 'rw-chip ' + (state.pauseNew ? 'rw-chip-paused' : 'rw-chip-held');
+          let modeText = 'watching for new drops';
+          let modeClass = 'rw-chip-held';
+          if (state.pauseNew) {
+            modeText = 'new drops paused · active tab still live';
+            modeClass = 'rw-chip-paused';
+          } else if (!state.followLatest) {
+            modeText = 'pinned to active tab · click to follow latest';
+            modeClass = 'rw-chip-demo';
+            mode.style.cursor = 'pointer';
+            mode.title = 'Click to follow newest airdrop tabs again';
+          } else {
+            mode.style.cursor = '';
+            mode.title = '';
+          }
+          mode.textContent = modeText;
+          mode.className = 'rw-chip ' + modeClass;
         }
       }
 
@@ -500,9 +517,11 @@ $showUni = !empty($chain['amm_links']['uniswap']) && in_array($amm, ['both', 'un
         el.querySelectorAll('.rw-tab').forEach(btn => {
           btn.addEventListener('click', function () {
             state.active = norm(btn.getAttribute('data-contract'));
+            state.followLatest = false;
             saveState();
             renderTabs();
             renderActiveTab(lastSnapshot);
+            updatePauseUi();
           });
         });
       }
@@ -613,7 +632,9 @@ $showUni = !empty($chain['amm_links']['uniswap']) && in_array($amm, ['both', 'un
             seeded: false
           };
           state.tabs.unshift(tab);
-          state.active = c;
+          if (state.followLatest !== false) {
+            state.active = c;
+          }
           known.add(c);
           promoted = c;
           break; // one new front tab per poll; next poll can catch another
@@ -719,6 +740,15 @@ $showUni = !empty($chain['amm_links']['uniswap']) && in_array($amm, ['both', 'un
       document.getElementById('rw-pause-new').addEventListener('click', function () {
         state.pauseNew = !state.pauseNew;
         saveState();
+        updatePauseUi();
+      });
+      document.getElementById('rw-watch-mode').addEventListener('click', function () {
+        if (state.pauseNew || state.followLatest !== false) return;
+        state.followLatest = true;
+        if (state.tabs.length) state.active = state.tabs[0].contract;
+        saveState();
+        renderTabs();
+        renderActiveTab(lastSnapshot);
         updatePauseUi();
       });
       updatePauseUi();
