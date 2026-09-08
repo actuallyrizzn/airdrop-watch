@@ -1,0 +1,15 @@
+{
+  "id": 4663,
+  "name": "Robinhood Chain",
+  "native_symbol": "ETH",
+  "explorer": "https://robinhoodchain.blockscout.com",
+  "api_base": "https://robinhoodchain.blockscout.com/api/v2",
+  "rpc": "https://rpc.mainnet.chain.robinhood.com",
+  "uniswap_chain_slug": "robinhood_chain",
+  "amm_links": {
+    "uniswap": true,
+    "pons": true,
+    "pons_url": "https://ponsfamily.com"
+  },
+  "notes": "Blockscout-compatible explorer API. Cloudflare-blocked explorers need the FlareSolverr proxy (see docs/DEPLOYMENT.md)."
+}

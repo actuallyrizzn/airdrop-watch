@@ -1,0 +1,24 @@
+# Secrets & local config
+config/watch.env
+config/chain.json
+proxy/.env
+*.pass
+.env
+.env.*
+
+# Runtime / junk
+*.db
+*.sqlite*
+__pycache__/
+*.pyc
+.venv/
+vendor/
+node_modules/
+.DS_Store
+*.log
+.php-cs-fixer.cache
+
+# Editor
+.idea/
+.vscode/
+*.swp
