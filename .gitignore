@@ -26,3 +26,4 @@ node_modules/
 .idea/
 .vscode/
 *.swp
+.otto-githooks-installed
