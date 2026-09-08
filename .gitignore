@@ -4,7 +4,11 @@ config/chain.json
 proxy/.env
 *.pass
 .env
-.env.*
+!.env.example
+!proxy/.env.example
+!config/*.example.env
+!config/*.example.json
+
 
 # Runtime / junk
 *.db
