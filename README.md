@@ -49,6 +49,7 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · deploy: [docs/DEPLOYMEN
 - Multi-address / multi-watch profiles from one install.
 - Optional notifications (webhook / Telegram) when a new tab is promoted.
 - Hardening: bind proxy to loopback + reverse proxy only; rate-limit auth.
+- Dex / indexer price fallbacks when explorers omit `exchange_rate` (DexScreener already wired in v0.1.1).
 
 ## License
 

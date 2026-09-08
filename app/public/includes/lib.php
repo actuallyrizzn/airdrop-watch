@@ -80,6 +80,54 @@ function aw_native_usd_fallback(): ?float
 }
 
 /**
+ * @param array<int,string> $contracts
+ * @return array<string,float>
+ */
+function aw_dexscreener_usd_prices(array $contracts): array
+{
+    $out = [];
+    $seen = [];
+    foreach ($contracts as $c) {
+        $c = strtolower(trim((string) $c));
+        if ($c === '' || isset($seen[$c]) || !preg_match('/^0x[a-f0-9]{40}$/', $c)) {
+            continue;
+        }
+        $seen[$c] = true;
+        $resp = aw_http_get('https://api.dexscreener.com/latest/dex/tokens/' . $c, 12);
+        if (!$resp['ok'] || !is_array($resp['json'])) {
+            continue;
+        }
+        $pairs = $resp['json']['pairs'] ?? null;
+        if (!is_array($pairs) || $pairs === []) {
+            continue;
+        }
+        $bestUsd = null;
+        $bestLiq = -1.0;
+        foreach ($pairs as $p) {
+            if (!is_array($p)) {
+                continue;
+            }
+            $usd = $p['priceUsd'] ?? null;
+            if (!is_numeric($usd)) {
+                continue;
+            }
+            $liq = 0.0;
+            if (isset($p['liquidity']['usd']) && is_numeric($p['liquidity']['usd'])) {
+                $liq = (float) $p['liquidity']['usd'];
+            }
+            if ($bestUsd === null || $liq > $bestLiq) {
+                $bestUsd = (float) $usd;
+                $bestLiq = $liq;
+            }
+        }
+        if ($bestUsd !== null && $bestUsd > 0) {
+            $out[$c] = $bestUsd;
+        }
+    }
+    return $out;
+}
+
+/**
  * @return array<string,mixed>|null
  */
 function aw_rpc(string $rpcUrl, string $method, array $params = []): ?array
@@ -323,12 +371,14 @@ function aw_fetch_snapshot(?string $address = null): array
     $holdings = [];
     $tokensUsd = 0.0;
     $tokensUsdKnown = false;
+    $needDex = [];
 
     foreach ($tokenRows as $row) {
         if (!is_array($row)) {
             continue;
         }
         $token = isset($row['token']) && is_array($row['token']) ? $row['token'] : [];
+        $contract = strtolower((string) ($token['address_hash'] ?? ''));
         $decimals = isset($token['decimals']) && is_numeric($token['decimals'])
             ? (int) $token['decimals']
             : 18;
@@ -337,10 +387,9 @@ function aw_fetch_snapshot(?string $address = null): array
         $rate = isset($token['exchange_rate']) && is_numeric($token['exchange_rate'])
             ? (float) $token['exchange_rate']
             : null;
-        $usd = $rate !== null ? $amount * $rate : null;
-        if ($usd !== null) {
-            $tokensUsd += $usd;
-            $tokensUsdKnown = true;
+        $priceSource = $rate !== null ? 'blockscout' : null;
+        if ($rate === null && $contract !== '') {
+            $needDex[] = $contract;
         }
 
         $holdings[] = [
@@ -352,11 +401,27 @@ function aw_fetch_snapshot(?string $address = null): array
             'amount' => $amount,
             'amount_display' => aw_format_amount($raw, $decimals),
             'exchange_rate' => $rate,
-            'usd' => $usd,
+            'usd' => null,
+            'price_source' => $priceSource,
             'icon_url' => $token['icon_url'] ?? null,
             'type' => (string) ($token['type'] ?? 'ERC-20'),
         ];
     }
+
+    $dexPrices = $needDex !== [] ? aw_dexscreener_usd_prices($needDex) : [];
+    foreach ($holdings as &$h) {
+        $c = strtolower((string) ($h['contract'] ?? ''));
+        if ($h['exchange_rate'] === null && $c !== '' && isset($dexPrices[$c])) {
+            $h['exchange_rate'] = $dexPrices[$c];
+            $h['price_source'] = 'dexscreener';
+        }
+        if ($h['exchange_rate'] !== null) {
+            $h['usd'] = ((float) $h['amount']) * ((float) $h['exchange_rate']);
+            $tokensUsd += $h['usd'];
+            $tokensUsdKnown = true;
+        }
+    }
+    unset($h);
 
     usort($holdings, static function ($a, $b) {
         $au = $a['usd'] ?? -1;

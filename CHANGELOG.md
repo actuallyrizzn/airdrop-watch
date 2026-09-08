@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.1] - 2026-09-08
+
+### Fixed
+- Token USD pricing falls back to **DexScreener** when the explorer returns a null `exchange_rate` (typical for fresh airdrops).
+
 ## [0.1.0] - 2026-09-08
 
 ### Added
